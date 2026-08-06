@@ -6,10 +6,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      ANDROID_HOME: /usr/local/lib/android/sdk
-      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
-      ANDROID_SETUP: 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Get assets
@@ -23,10 +19,16 @@ jobs:
       - uses: actions/setup-java@v4
         with: { java-version: '11', distribution: 'temurin' }
       - uses: nttld/setup-ndk@v1
+        id: ndk
         with: { ndk-version: r21e, link-to-sdk: true }
-      - name: Install Libs + Set Env
+      - name: Setup SDK components
         run: |
-          echo ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/21.4.7075529 >> $GITHUB_ENV
+          yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/usr/local/lib/android/sdk "platforms;android-34" "build-tools;34.0.0"
+          echo ANDROID_HOME=/usr/local/lib/android/sdk >> $GITHUB_ENV
+          echo ANDROID_SDK_ROOT=/usr/local/lib/android/sdk >> $GITHUB_ENV
+          echo ANDROID_NDK_ROOT=/usr/local/lib/android/sdk/ndk/21.4.7075529 >> $GITHUB_ENV
+          echo ANDROID_SETUP=true >> $GITHUB_ENV
+      - run: |
           haxelib install flixel 5.6.1 --quiet
           haxelib install flixel-addons 3.2.2 --quiet
           haxelib install tjson 1.4.0 --quiet
@@ -36,13 +38,6 @@ jobs:
           haxelib git linc_luajit https://github.com/nebulazorua/linc_luajit.git --quiet || haxelib install linc_luajit --quiet
           haxelib install lime --quiet
           haxelib install openfl --quiet
-      - name: Debug
-        run: |
-          echo HOME=$ANDROID_HOME
-          echo SDK=$ANDROID_SDK_ROOT
-          echo NDK=$ANDROID_NDK_ROOT
-          ls $ANDROID_HOME/ndk/ 2>/dev/null || echo "no ndk subdir, checking parent..."
-          ls $ANDROID_HOME/ 2>/dev/null | head -5 || echo "no SDK dir"
       - name: Build APK
         run: haxelib run lime build android -final
       - uses: actions/upload-artifact@v4
