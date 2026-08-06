@@ -1,8 +1,19 @@
 name: Build Android APK
-on: [push, workflow_dispatch]
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: Build type
+        default: release
+        type: choice
+        options: [release, debug]
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      BUILD_TYPE: release
     steps:
       - uses: actions/checkout@v4
       - name: Get assets
@@ -19,6 +30,7 @@ jobs:
         id: ndk
         with: { ndk-version: r21e, link-to-sdk: true }
       - run: |
+          echo ANDROID_NDK_ROOT=${{ steps.ndk.outputs.ndk-path }} >> $GITHUB_ENV
           haxelib install flixel 5.6.1 --quiet
           haxelib install flixel-addons 3.2.2 --quiet
           haxelib install tjson 1.4.0 --quiet
@@ -29,8 +41,8 @@ jobs:
           haxelib install lime --quiet
           haxelib install openfl --quiet
       - name: Build APK
-        env:
-          ANDROID_NDK_ROOT: steps.ndk.outputs.ndk-path
-        run: haxelib run lime build android -final
+        run: |
+          echo NDK=$ANDROID_NDK_ROOT SDK=$ANDROID_SDK_ROOT
+          haxelib run lime build android -final
       - uses: actions/upload-artifact@v4
         with: { name: PsychEngine-Android, path: 'export/**/*.apk', if-no-files-found: warn }
