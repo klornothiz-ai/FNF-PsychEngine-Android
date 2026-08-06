@@ -22,7 +22,6 @@ jobs:
 
       - run: mkdir -p ~/haxelib && haxelib setup ~/haxelib
 
-      # تم تحديث إصدار Java إلى 17 لتوافق أدوات Android SDK الأخيرة
       - uses: actions/setup-java@v4
         with: { java-version: '17', distribution: 'temurin' }
 
@@ -49,8 +48,12 @@ jobs:
           haxelib install lime --quiet
           haxelib install openfl --quiet
 
-      - name: Ensure assets/fonts directory exists
-        run: mkdir -p assets/fonts
+      # إنشاء المجلدات المتوقعة لمنع توقف Lime
+      - name: Ensure required directories exist
+        run: |
+          mkdir -p assets/fonts
+          mkdir -p example_mods
+          mkdir -p mods
 
       - name: Build APK
         run: haxelib run lime build android -final
