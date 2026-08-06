@@ -1,44 +1,24 @@
 name: Build Android APK
-
-on:
-  push:
-    branches: [ main, master ]
-  workflow_dispatch:
-    inputs:
-      build_type:
-        description: Build type
-        default: release
-        type: choice
-        options: [release, debug]
-
+on: [push, workflow_dispatch]
 jobs:
-  build-android:
+  build:
     runs-on: ubuntu-latest
-    env:
-      BUILD_TYPE: release
     steps:
       - uses: actions/checkout@v4
-      - name: Set build type
-        run: echo "BUILD_TYPE=${{ github.event.inputs.build_type || 'release' }}" >> $GITHUB_ENV
-      - name: Download Assets
+      - name: Get assets
         run: |
           git clone --depth 1 --filter=blob:none --sparse https://github.com/ShadowMario/FNF-PsychEngine.git _t
           cd _t && git sparse-checkout set assets && cd ..
           cp -r _t/assets ./assets && rm -rf _t
       - uses: krdlab/setup-haxe@v1
-        with:
-          haxe-version: '4.2.5'
-      - run: mkdir ~/haxelib && haxelib setup ~/haxelib
+        with: { haxe-version: '4.2.5' }
+      - run: mkdir -p ~/haxelib && haxelib setup ~/haxelib
       - uses: actions/setup-java@v4
-        with:
-          java-version: '11'
-          distribution: 'temurin'
+        with: { java-version: '11', distribution: 'temurin' }
       - uses: nttld/setup-ndk@v1
         id: ndk
-        with:
-          ndk-version: r21e
-      - name: Install Libs
-        run: |
+        with: { ndk-version: r21e, link-to-sdk: true }
+      - run: |
           haxelib install flixel 5.6.1 --quiet
           haxelib install flixel-addons 3.2.2 --quiet
           haxelib install tjson 1.4.0 --quiet
@@ -50,15 +30,7 @@ jobs:
           haxelib install openfl --quiet
       - name: Build APK
         env:
-          ANDROID_NDK_ROOT: ${{ steps.ndk.outputs.ndk-path }}
-        run: |
-          if [ "$BUILD_TYPE" = "release" ]; then
-            haxelib run lime build android -final
-          else
-            haxelib run lime build android -debug
-          fi
+          ANDROID_NDK_ROOT: steps.ndk.outputs.ndk-path
+        run: haxelib run lime build android -final
       - uses: actions/upload-artifact@v4
-        with:
-          name: PsychEngine-Android
-          path: export/**/*.apk
-          if-no-files-found: warn
+        with: { name: PsychEngine-Android, path: 'export/**/*.apk', if-no-files-found: warn }
