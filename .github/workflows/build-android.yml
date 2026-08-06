@@ -21,7 +21,7 @@ jobs:
           rm -rf _t
 
       - uses: krdlab/setup-haxe@v1
-        with: { haxe-version: '4.2.5' }
+        with: { haxe-version: '4.3.6' }
 
       - run: mkdir -p ~/haxelib && haxelib setup ~/haxelib
 
@@ -45,7 +45,7 @@ jobs:
           haxelib install flixel 5.6.1 --quiet
           haxelib install flixel-addons 3.2.2 --quiet
           haxelib install tjson 1.4.0 --quiet
-          haxelib install flxanimate --quiet
+          haxelib install flxanimate 3.1.0 --quiet
           haxelib install hscript-iris 1.1.3 --quiet
           haxelib remove linc_luajit || true
           haxelib git linc_luajit https://github.com/nebulazorua/linc_luajit.git --quiet || haxelib install linc_luajit --quiet
