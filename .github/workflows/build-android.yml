@@ -10,10 +10,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Get assets
+      - name: Get assets and source
         run: |
           git clone --depth 1 https://github.com/ShadowMario/FNF-PsychEngine.git _t
           mkdir -p assets/fonts
+          cp -rn _t/source ./ || true
           cp -rn _t/assets/* ./assets/ || true
           cp -rn _t/example_mods ./ || true
           cp -rn _t/art ./ || true
