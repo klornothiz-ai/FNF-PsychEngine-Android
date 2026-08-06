@@ -3,26 +3,42 @@ on:
   push:
     branches: [ main, master ]
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Get assets
         run: |
-          git clone --depth 1 --filter=blob:none --sparse https://github.com/ShadowMario/FNF-PsychEngine.git _t
-          cd _t && git sparse-checkout set assets && cd ..
-          cp -r _t/assets ./assets && rm -rf _t
+          git clone --depth 1 https://github.com/ShadowMario/FNF-PsychEngine.git _t
+          mkdir -p assets/fonts
+          cp -rn _t/assets/* ./assets/ || true
+          # جلب ملفات الجذر إن وجدت مثل example_mods وغيرها
+          cp -rn _t/example_mods ./ || true
+          rm -rf _t
+
       - uses: krdlab/setup-haxe@v1
         with: { haxe-version: '4.2.5' }
+
       - run: mkdir -p ~/haxelib && haxelib setup ~/haxelib
+
       - uses: actions/setup-java@v4
-        with: { java-version: '11', distribution: 'temurin' }
-      - name: Setup Android SDK + NDK
+        with: { java-version: '17', distribution: 'temurin' }
+
+      - uses: nttld/setup-ndk@v1
+        id: ndk
+        with: { ndk-version: r21e, link-to-sdk: true }
+
+      - name: Setup SDK components
         run: |
-          yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/usr/local/lib/android/sdk "platforms;android-34" "build-tools;34.0.0" "ndk;21.4.7075529"
+          yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/usr/local/lib/android/sdk "platforms;android-34" "build-tools;34.0.0"
+          echo ANDROID_HOME=/usr/local/lib/android/sdk >> $GITHUB_ENV
+          echo ANDROID_SDK_ROOT=/usr/local/lib/android/sdk >> $GITHUB_ENV
           echo ANDROID_NDK_ROOT=/usr/local/lib/android/sdk/ndk/21.4.7075529 >> $GITHUB_ENV
           echo ANDROID_SETUP=true >> $GITHUB_ENV
+
       - run: |
           haxelib install flixel 5.6.1 --quiet
           haxelib install flixel-addons 3.2.2 --quiet
@@ -33,7 +49,20 @@ jobs:
           haxelib git linc_luajit https://github.com/nebulazorua/linc_luajit.git --quiet || haxelib install linc_luajit --quiet
           haxelib install lime --quiet
           haxelib install openfl --quiet
+
+      # إنشاء المجلدات وملف list.txt المطلوب لمنع الخطأ
+      - name: Ensure required assets and files exist
+        run: |
+          mkdir -p assets/fonts
+          mkdir -p example_mods
+          mkdir -p mods
+          touch list.txt
+          touch assets/list.txt
+          touch example_mods/list.txt
+          touch mods/list.txt
+
       - name: Build APK
         run: haxelib run lime build android -final
+
       - uses: actions/upload-artifact@v4
         with: { name: PsychEngine-Android, path: 'export/**/*.apk', if-no-files-found: warn }
