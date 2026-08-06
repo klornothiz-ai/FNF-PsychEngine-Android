@@ -12,19 +12,22 @@ on:
         required: true
         default: 'release'
         type: choice
-        options:
-          - release
-          - debug
+        options: [release, debug]
 
 jobs:
   build-android:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      
+      - name: Download Assets
+        run: |
+          echo "📥 Downloading assets from original Psych Engine (~542MB)..."
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/ShadowMario/FNF-PsychEngine.git _temp
+          cd _temp && git sparse-checkout set assets && cd ..
+          cp -r _temp/assets ./assets && rm -rf _temp
+          du -sh assets/
       
       - name: Setup Haxe
         uses: krdlab/setup-haxe@v1
@@ -32,9 +35,7 @@ jobs:
           haxe-version: '4.2.5'
       
       - name: Setup Haxelib
-        run: |
-          mkdir ~/haxelib
-          haxelib setup ~/haxelib
+        run: mkdir ~/haxelib && haxelib setup ~/haxelib
       
       - name: Setup Android NDK
         uses: nttld/setup-ndk@v1
@@ -47,7 +48,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       
-      - name: Install Haxe Libraries
+      - name: Install Libraries
         run: |
           haxelib install flixel 5.6.1 --quiet
           haxelib install flixel-addons 3.2.2 --quiet
@@ -59,11 +60,8 @@ jobs:
           haxelib install lime --quiet
           haxelib install openfl --quiet
       
-      - name: Setup Lime Android
+      - name: Setup Lime
         run: haxelib run lime setup android
-        env:
-          ANDROID_HOME: ${{ env.ANDROID_HOME }}
-          ANDROID_NDK_ROOT: ${{ env.ANDROID_NDK_ROOT }}
       
       - name: Build APK
         run: |
@@ -73,16 +71,9 @@ jobs:
             haxelib run lime build android -debug
           fi
       
-      - name: Find APK
-        id: find_apk
-        run: |
-          APK_PATH=$(find export/ -name "*.apk" | head -1)
-          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
-          ls -lh "$APK_PATH" || echo "APK not found"
-      
-      - name: Upload APK Artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: PsychEngine-Android-${{ github.event.inputs.build_type || 'release' }}
-          path: ${{ steps.find_apk.outputs.apk_path }}
+          name: PsychEngine-Android
+          path: export/**/*.apk
           if-no-files-found: warn
