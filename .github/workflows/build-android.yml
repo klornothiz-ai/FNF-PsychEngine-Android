@@ -53,6 +53,11 @@ jobs:
           haxelib install lime --quiet
           haxelib install openfl --quiet
 
+      - name: Patch Project.xml for flixel 4.x
+        run: |
+          sed -i 's|<haxelib name="flixel"[^/]*/>|<haxelib name="flixel" version="4.11.0"/>|g' Project.xml
+          sed -i 's|<haxelib name="flixel-addons"[^/]*/>|<haxelib name="flixel-addons" version="2.11.0"/>|g' Project.xml
+
       - name: Ensure required assets and files exist
         run: |
           mkdir -p assets/fonts
