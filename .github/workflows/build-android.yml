@@ -10,7 +10,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # إصلاح خطوة جلب الأصول وتأمين مجلد الخطوط
       - name: Get assets
         run: |
           git clone --depth 1 https://github.com/ShadowMario/FNF-PsychEngine.git _t
@@ -23,8 +22,9 @@ jobs:
 
       - run: mkdir -p ~/haxelib && haxelib setup ~/haxelib
 
+      # تم تحديث إصدار Java إلى 17 لتوافق أدوات Android SDK الأخيرة
       - uses: actions/setup-java@v4
-        with: { java-version: '11', distribution: 'temurin' }
+        with: { java-version: '17', distribution: 'temurin' }
 
       - uses: nttld/setup-ndk@v1
         id: ndk
@@ -49,7 +49,6 @@ jobs:
           haxelib install lime --quiet
           haxelib install openfl --quiet
 
-      # التأكد الإضافي من وجود المسار المطلق للمجلد لتفادي أي توقف
       - name: Ensure assets/fonts directory exists
         run: mkdir -p assets/fonts
 
