@@ -42,9 +42,8 @@ jobs:
           echo ANDROID_SETUP=true >> $GITHUB_ENV
 
       - run: |
-          haxelib install flixel 4.11.0 --quiet
-          haxelib install flixel-addons 2.11.0 --quiet
-          haxelib install flixel-tools --quiet
+          haxelib install flixel 5.6.1 --quiet
+          haxelib install flixel-addons 3.2.2 --quiet
           haxelib install tjson 1.4.0 --quiet
           haxelib install flxanimate --quiet
           haxelib install hscript-iris 1.1.3 --quiet
@@ -53,10 +52,75 @@ jobs:
           haxelib install lime --quiet
           haxelib install openfl --quiet
 
-      - name: Patch Project.xml for flixel 4.x
+      - name: Patch mobile source for flixel 5.x
         run: |
-          sed -i 's|<haxelib name="flixel"[^/]*/>|<haxelib name="flixel" version="4.11.0"/>|g' Project.xml
-          sed -i 's|<haxelib name="flixel-addons"[^/]*/>|<haxelib name="flixel-addons" version="2.11.0"/>|g' Project.xml
+          rm -f source/mobile/MobileInputHandler.hx
+          rm -f source/mobile/MobileTouchControls.hx
+          cat > source/mobile/MobileInputHandler.hx << 'HXEOF'
+          package mobile;
+
+          import flixel.FlxG;
+          import flixel.input.keyboard.FlxKey;
+
+          class MobileInputHandler
+          {
+            public static var LEFT_BINDS:Array<FlxKey> = [FlxKey.LEFT, FlxKey.A];
+            public static var DOWN_BINDS:Array<FlxKey> = [FlxKey.DOWN, FlxKey.S];
+            public static var UP_BINDS:Array<FlxKey> = [FlxKey.UP, FlxKey.W];
+            public static var RIGHT_BINDS:Array<FlxKey> = [FlxKey.RIGHT, FlxKey.D];
+            public static var ENTER_BINDS:Array<FlxKey> = [FlxKey.ENTER, FlxKey.SPACE];
+            public static var ESCAPE_BINDS:Array<FlxKey> = [FlxKey.ESCAPE, FlxKey.BACKSPACE];
+
+            public static function handleAction(action:String):Void
+            {
+              switch (action)
+              {
+                case "left": for (key in LEFT_BINDS) FlxG.keys.pressKey(key);
+                case "down": for (key in DOWN_BINDS) FlxG.keys.pressKey(key);
+                case "up": for (key in UP_BINDS) FlxG.keys.pressKey(key);
+                case "right": for (key in RIGHT_BINDS) FlxG.keys.pressKey(key);
+                case "pause": for (key in ENTER_BINDS) FlxG.keys.pressKey(key);
+                case "back": for (key in ESCAPE_BINDS) FlxG.keys.pressKey(key);
+              }
+            }
+
+            public static function releaseAction(action:String):Void
+            {
+              switch (action)
+              {
+                case "left": for (key in LEFT_BINDS) FlxG.keys.releaseKey(key);
+                case "down": for (key in DOWN_BINDS) FlxG.keys.releaseKey(key);
+                case "up": for (key in UP_BINDS) FlxG.keys.releaseKey(key);
+                case "right": for (key in RIGHT_BINDS) FlxG.keys.releaseKey(key);
+                case "pause": for (key in ENTER_BINDS) FlxG.keys.releaseKey(key);
+                case "back": for (key in ESCAPE_BINDS) FlxG.keys.releaseKey(key);
+              }
+            }
+          }
+          HXEOF
+          cat > source/mobile/MobileTouchControls.hx << 'HXEOF'
+          package mobile;
+
+          import flixel.FlxG;
+          import flixel.util.FlxSave;
+
+          class MobileTouchControls
+          {
+            public static var enabled:Bool = true;
+
+            public static function loadTouchPositions():Dynamic
+            {
+              return FlxSave.load("touchPositions", "psychEngineMobile");
+            }
+
+            public static function saveTouchPositions(data:Dynamic):Void
+            {
+              var save = FlxSave.bind("touchPositions", "psychEngineMobile");
+              save.data.touchPositions = data;
+              save.flush();
+            }
+          }
+          HXEOF
 
       - name: Ensure required assets and files exist
         run: |
