@@ -37,6 +37,7 @@
 	<set name="BUILD_DIR" value="export/32bit" if="32bits" />
 	<classpath name="source" />
 	<define name="CRASH_HANDLER" if="desktop release" />
+	<!-- fonts dir populated via setup.sh from original assets -->
 	<assets path="assets/fonts" />
 	<assets path="assets/shared" exclude="*.ogg" if="web"/>
 	<assets path="assets/shared" exclude="*.mp3" unless="web"/>
