@@ -52,73 +52,34 @@ jobs:
           haxelib install lime --quiet
           haxelib install openfl --quiet
 
-      - name: Patch mobile source for flixel 5.x
+      - name: Patch mobile source stubs
         run: |
           rm -f source/mobile/MobileInputHandler.hx
           rm -f source/mobile/MobileTouchControls.hx
+          rm -f source/mobile/Hitbox.hx
+          rm -f source/mobile/MobileControls.hx
+          rm -f source/mobile/MobileButton.hx
           cat > source/mobile/MobileInputHandler.hx << 'HXEOF'
           package mobile;
-
-          import flixel.FlxG;
-          import flixel.input.keyboard.FlxKey;
-
-          class MobileInputHandler
-          {
-            public static var LEFT_BINDS:Array<FlxKey> = [FlxKey.LEFT, FlxKey.A];
-            public static var DOWN_BINDS:Array<FlxKey> = [FlxKey.DOWN, FlxKey.S];
-            public static var UP_BINDS:Array<FlxKey> = [FlxKey.UP, FlxKey.W];
-            public static var RIGHT_BINDS:Array<FlxKey> = [FlxKey.RIGHT, FlxKey.D];
-            public static var ENTER_BINDS:Array<FlxKey> = [FlxKey.ENTER, FlxKey.SPACE];
-            public static var ESCAPE_BINDS:Array<FlxKey> = [FlxKey.ESCAPE, FlxKey.BACKSPACE];
-
-            public static function handleAction(action:String):Void
-            {
-              switch (action)
-              {
-                case "left": for (key in LEFT_BINDS) FlxG.keys.pressKey(key);
-                case "down": for (key in DOWN_BINDS) FlxG.keys.pressKey(key);
-                case "up": for (key in UP_BINDS) FlxG.keys.pressKey(key);
-                case "right": for (key in RIGHT_BINDS) FlxG.keys.pressKey(key);
-                case "pause": for (key in ENTER_BINDS) FlxG.keys.pressKey(key);
-                case "back": for (key in ESCAPE_BINDS) FlxG.keys.pressKey(key);
-              }
-            }
-
-            public static function releaseAction(action:String):Void
-            {
-              switch (action)
-              {
-                case "left": for (key in LEFT_BINDS) FlxG.keys.releaseKey(key);
-                case "down": for (key in DOWN_BINDS) FlxG.keys.releaseKey(key);
-                case "up": for (key in UP_BINDS) FlxG.keys.releaseKey(key);
-                case "right": for (key in RIGHT_BINDS) FlxG.keys.releaseKey(key);
-                case "pause": for (key in ENTER_BINDS) FlxG.keys.releaseKey(key);
-                case "back": for (key in ESCAPE_BINDS) FlxG.keys.releaseKey(key);
-              }
-            }
+          class MobileInputHandler {
+            public static function onButtonDown(action:String):Void {}
+            public static function onButtonUp(action:String):Void {}
+            public static function handleAction(action:String):Void {}
+            public static function releaseAction(action:String):Void {}
           }
           HXEOF
           cat > source/mobile/MobileTouchControls.hx << 'HXEOF'
           package mobile;
-
-          import flixel.FlxG;
-          import flixel.util.FlxSave;
-
-          class MobileTouchControls
-          {
+          class MobileTouchControls {
             public static var enabled:Bool = true;
-
-            public static function loadTouchPositions():Dynamic
-            {
-              return FlxSave.load("touchPositions", "psychEngineMobile");
-            }
-
-            public static function saveTouchPositions(data:Dynamic):Void
-            {
-              var save = FlxSave.bind("touchPositions", "psychEngineMobile");
-              save.data.touchPositions = data;
-              save.flush();
-            }
+          }
+          HXEOF
+          cat > source/mobile/Hitbox.hx << 'HXEOF'
+          package mobile;
+          import flixel.FlxSprite;
+          class Hitbox extends FlxSprite {
+            public function new(x:Float=0, y:Float=0, w:Float=1, h:Float=1) { super(x, y); }
+            override function update(elapsed:Float) { super.update(elapsed); }
           }
           HXEOF
 
