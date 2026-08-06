@@ -1,3 +1,13 @@
-.haxelib/
-.haxelsp/recording/
-dump/
+export/
+*.apk
+*.aab
+*.keystore
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+local.properties
+*.iml
+.gradle/
+node_modules/
